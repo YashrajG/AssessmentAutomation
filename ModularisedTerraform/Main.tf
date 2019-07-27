@@ -5,26 +5,26 @@ provider "aws" {
 
 # VPC and IG-
 module "VPC" {
-  source = "./Network/VPC/VPC"
+  source = "./Network/VPC"
 }
 
 # -Subnets
 module "PublicSubnet" {
-  source = "./Network/Subnet/Subnet"
+  source = "./Network/Subnet"
   vpc_id = "${module.VPC.VPC_ID}"
   subnet_cidr = "10.0.0.0/24"
   subnet_name = "PublicSubnet"
 }
 
 module "PrivateSubnet1" {
-  source = "./Network/Subnet/Subnet"
+  source = "./Network/Subnet"
   vpc_id = "${module.VPC.VPC_ID}"
   subnet_cidr = "10.0.1.0/24"
   subnet_name = "PrivateSubnet1"
 }
 
 module "PrivateSubnet2" {
-  source = "./Network/Subnet/Subnet"
+  source = "./Network/Subnet"
   vpc_id = "${module.VPC.VPC_ID}"
   subnet_cidr = "10.0.1.128/24"
   subnet_name = "PrivateSubnet2"
@@ -33,78 +33,78 @@ module "PrivateSubnet2" {
 resource "aws_eip" "NAT-EIP" {}
 
 module "NATGateway" {
-  source = "./Network/NATGateway/NATGateway"
+  source = "./Network/NATGateway"
   elasticIPID = "${aws_eip.NAT-EIP.id}"
   subnet_id = "${module.PublicSubnet.subnet_id}"
 }
 
 # --Route Tables
 module "PublicRouteTable" {
-  source = "./Network/RouteTable/RouteTable"
+  source = "./Network/RouteTable"
   vpc_id = "${module.VPC.VPC_ID}"
   gateway_id = "${module.VPC.IG_ID}"
   RouteTableName = "PublicRouteTable"
 }
 
 module "PrivateRouteTable" {
-  source = "./Network/RouteTable/RouteTable"
+  source = "./Network/RouteTable"
   vpc_id = "${module.VPC.VPC_ID}"
   gateway_id = "${module.NATGateway.NATGateway_id}"
   RouteTableName = "PublicRouteTable"
 }
 
 module "PublicSubnetRoute" {
-  source = "./Network/Route/Route"
+  source = "./Network/Route"
   route_table_id = "${module.PublicRouteTable.route_table_id}"
   gateway_id = "${module.VPC.IG_ID}"
   is_to_nat = false
 }
 
 module "PrivateSubnetRoute" {
-  source = "./Network/Route/Route"
+  source = "./Network/Route"
   route_table_id = "${module.PrivateRouteTable.route_table_id}"
   nat_gateway_id = "${module.NATGateway.NATGateway_id}"
   is_to_nat = true
 }
 
 module "PublicRouteTableAssociation" {
-  source = "./RouteTableAssociation/RouteTableAssociation"
+  source = "./Network/RouteTableAssociation"
   subnet_id = "${module.PublicSubnet.subnet_id}"
   route_table_id = "${module.PublicRouteTable.route_table_id}"
 }
 
 module "PrivateRouteTableAssociation1" {
-  source = "./RouteTableAssociation/RouteTableAssociation"
+  source = "./Network/RouteTableAssociation"
   subnet_id = "${module.PrivateSubnet1.subnet_id}"
   route_table_id = "${module.PrivateRouteTable.route_table_id}"
 }
 
 module "PrivateRouteTableAssociation2" {
-  source = "./RouteTableAssociation/RouteTableAssociation"
+  source = "./Network/RouteTableAssociation"
   subnet_id = "${module.PrivateSubnet2.subnet_id}"
   route_table_id = "${module.PrivateRouteTable.route_table_id}"
 }
 
 # Security Group
 module "PublicEC2SecurityGroup" {
-  source = "./Network/SecurityGroup/SecurityGroup"
+  source = "./Network/SecurityGroup"
   vpc_id = "${module.VPC.VPC_ID}"
 }
 
 module "PrivateEC2SecurityGroup" {
-  source = "./Network/SecurityGroup/SecurityGroup"
+  source = "./Network/SecurityGroup"
   vpc_id = "${module.VPC.VPC_ID}"
 }
 
 module "RDSSecurityGroup" {
-  source = "./Network/SecurityGroup/SecurityGroup"
+  source = "./Network/SecurityGroup"
   vpc_id = "${module.VPC.VPC_ID}"
 }
 
 
 # Ingress rule for public EC2 which only allows SSH from Quantiphi Eureka
 module "public_ec2_sg_ingress_ssh" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = false
   type = "ingress"
   security_group_id = "${module.PublicEC2SecurityGroup.security_group_id}"
@@ -116,7 +116,7 @@ module "public_ec2_sg_ingress_ssh" {
 
 # Egress rule for public EC2 which only allows HTTP for package updates
 module "public_ec2_sg_egress_http" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = true
   type = "egress"
   security_group_id = "${module.PublicEC2SecurityGroup.security_group_id}"
@@ -128,7 +128,7 @@ module "public_ec2_sg_egress_http" {
 
 # Egress rule for public EC2 which only allows HTTPS for package updates
 module "public_ec2_sg_egress_https" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = true
   type = "egress"
   security_group_id = "${module.PublicEC2SecurityGroup.security_group_id}"
@@ -140,7 +140,7 @@ module "public_ec2_sg_egress_https" {
 
 # Ingress rule for private EC2 which only allows SSH from public ec2 instance
 module "private_ec2_sg_ingress_ssh" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = false
   type = "ingress"
   security_group_id = "${module.PrivateEC2SecurityGroup.security_group_id}"
@@ -152,7 +152,7 @@ module "private_ec2_sg_ingress_ssh" {
 
 # Egress rule for private EC2 which only allows HTTP for package updates
 module "private_ec2_sg_egress_http" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = true
   type = "egress"
   security_group_id = "${module.PrivateEC2SecurityGroup.security_group_id}"
@@ -164,7 +164,7 @@ module "private_ec2_sg_egress_http" {
 
 # Egress rule for private EC2 which only allows HTTPS for package updates
 module "private_ec2_sg_egress_https" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source   = true
   type = "egress"
   security_group_id = "${module.PrivateEC2SecurityGroup.security_group_id}"
@@ -176,7 +176,7 @@ module "private_ec2_sg_egress_https" {
 
 # Egress rule for private EC2 which allows MySQL connection with private RDS instance
 module "private_ec2_sg_egress_rds" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = false
   type = "egress"
   security_group_id = "${module.PrivateEC2SecurityGroup.security_group_id}"
@@ -188,7 +188,7 @@ module "private_ec2_sg_egress_rds" {
 
 # Ingress rule for private RDS which only allows connection from private ec2 instance
 module "rds_sg_ingress" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = false
   type = "ingress"
   security_group_id = "${module.RDSSecurityGroup.security_group_id}"
@@ -200,7 +200,7 @@ module "rds_sg_ingress" {
 
 # Egress rule for private RDS which only allows HTTP for package updates
 module "rds_sg_egress_http" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = true
   type = "egress"
   security_group_id = "${module.RDSSecurityGroup.security_group_id}"
@@ -212,7 +212,7 @@ module "rds_sg_egress_http" {
 
 # Egress rule for private RDS which only allows HTTPS for package updates
 module "rds_sg_egress_2" {
-  source = "./Network/SecurityGroupRule/SecurityGroupRule"
+  source = "./Network/SecurityGroupRule"
   is_cidr_source = true
   type = "egress"
   security_group_id = "${module.RDSSecurityGroup.security_group_id}"
@@ -224,7 +224,7 @@ module "rds_sg_egress_2" {
 
 # Public EC2 instance
 module "public_ec2" {
-  source    = "./EC2/EC2"
+  source    = "./EC2"
   key_name  = "AssessmentKeyYR"
   vpc_security_group_ids = "${module.PublicEC2SecurityGroup.security_group_id}"
   subnet_id = "${var.PublicSubnet.id}"
@@ -232,7 +232,7 @@ module "public_ec2" {
 
 # Private EC2 instance
 module "private_ec2" {
-  source    = "./EC2/EC2"
+  source    = "./EC2"
   key_name  = "AssessmentKeyYR"
   vpc_security_group_ids = "${module.PrivateEC2SecurityGroup.security_group_id}"
   subnet_id = "${var.PrivateSubnet1.id}"
@@ -266,7 +266,7 @@ module "private_ec2" {
 
 # RDS
 module "yr_RDS" {
-  source = "./RDS/RDS"
+  source = "./RDS"
   db_name = "yr-DB"
   db_username = "Yashraj"
   db_password = var.db_password

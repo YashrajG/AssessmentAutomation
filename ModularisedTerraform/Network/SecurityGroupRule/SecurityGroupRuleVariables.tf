@@ -1,5 +1,5 @@
 variable "is_cidr_source" {
-  type = "string"
+  type = bool
   description = "True if the source is a CIDR as opposed to another security group"
 }
 variable "security_group_id" {
@@ -10,7 +10,7 @@ variable "security_group_id" {
 variable "type" {
   type = "string"
   description = "describe your variable"
-  Default = "ingress"
+  default = "ingress"
 }
 
 variable "source_security_group_id" {
@@ -36,4 +36,4 @@ variable "to_port" {
 variable "protocol" {
   type = "string"
   description = "The protocol which the rule applies to"
-}
+} 

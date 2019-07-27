@@ -1,7 +1,7 @@
 variable "security_group_name" {
   type = "string"
   description = "Name of the security group"
-  Default = "yr-SecurityGroup"
+  default = "yr-SecurityGroup"
 }
 
 variable "vpc_id" {

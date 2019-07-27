@@ -8,7 +8,7 @@ resource "aws_security_group_rule" "sg_source_security_group" {
   protocol                 = "${var.protocol}"
 }
 
-resource "aws_security_group_rule" "sg_source_security_group" {
+resource "aws_security_group_rule" "cidr_source_security_group" {
   count             = var.is_cidr_source ? 1 : 0
   security_group_id = "${var.sg_id}"
   type              = "${var.type}"

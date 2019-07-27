@@ -14,7 +14,7 @@ variable "nat_gateway_id" {
 }
 
 variable "is_to_nat" {
-  type = "bool"
+  type = bool
   description = "True if the route is to a NAT Gateway"
-  Default = false
+  default = false
 }

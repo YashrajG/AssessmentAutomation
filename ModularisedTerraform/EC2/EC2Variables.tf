@@ -34,11 +34,11 @@ variable "subnet_id" {
 variable "instance_name" {
   type = "string"
   description = "Name of the instance"
-  Default = "yr-instance"
+  default = "yr-instance"
 }
 
 variable "ProjectName" {
   type = "string"
   description = "Name of the Project"
-  Default = "pe-training"
+  default = "pe-training"
 }

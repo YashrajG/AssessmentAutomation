@@ -11,5 +11,5 @@ variable "subnet_id" {
 variable "ProjectName" {
   type = "string"
   description = "name of the project"
-  Default = "pe-training"
+  default = "pe-training"
 }

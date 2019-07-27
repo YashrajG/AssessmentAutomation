@@ -11,7 +11,7 @@ variable "subnet_ids" {
 variable "ProjectName" {
   type = "string"
   description = "Name of the Project"
-  Default = "pe-training"
+  default = "pe-training"
 }
 
 variable "allocated_storage" {
@@ -35,7 +35,7 @@ variable "instance_class" {
 variable "db_name" {
   description = "Database name"
   type = string
-  Default = "yr-db"
+  default = "yr-db"
 }
 
 variable "db_username" {
