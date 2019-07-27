@@ -1,0 +1,129 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  
+  SNSName:
+    Description : Name of the SNS Topic
+    AllowedPattern: '[a-zA-Z0-9\_\-]+'
+    Default: yrSNSTopic
+    Type : String
+    MinLength : 1
+    MaxLength: 256
+
+  Email:
+    Type: String
+    Description: The email address of the first subscriber of the topic.
+    MinLength : 1
+    AllowedPattern: '[^\s\@]+@[^\s\@]+\.[^\s\@]+'
+    ConstraintDescription: "Must be a valid email id"
+
+  LambdaFunctionName:
+    Description: "Name of Lambda function"
+    Default: "yr-Lambda"
+    AllowedPattern: '(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}(-gov)?-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?'
+    ConstraintDescription: "Must be between 1 and 140 characters long"
+    MaxLength: '140'
+    MinLength: '1'
+    Type: "String"
+
+  LambdaHandlerName:
+    Description: "Handler of Lambda function"
+    Default: "lambda_email.lambda_handler"
+    AllowedPattern: '[^\s\.]+'
+    ConstraintDescription: "Must be between 1 and 128 characters long"
+    MaxLength: '128'
+    MinLength: '1'
+    Type: "String"
+
+  EventRuleName:
+    Description: "Name of Scheduled Event Rule"
+    Default: "KaustubhAssignmentEvent"
+    AllowedPattern: '[\.\-_A-Za-z0-9]+'
+    ConstraintDescription: "Must be between 1 and 64 characters long"
+    MaxLength: '64'
+    MinLength: '1'
+    Type: "String"
+  
+Resources:
+
+  timeEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Event to trigger a lambda function at 10AM
+      # 10:00 IST => 4:30 UTC
+      ScheduleExpression: cron(30 4 * * ? *)
+      Name: !Ref EventRuleName
+      State: "ENABLED"
+  
+  SNSEmailTopic :
+    Type : AWS::SNS::Topic
+    Properties :
+      DisplayName : !Ref SNSName
+      TopicName : !Ref SNSName
+  
+  SNSEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint:
+        !Ref Email
+      Protocol: email
+      TopicArn:
+        !Ref SNSEmailTopic
+    DependsOn:
+      - SNSEmailTopic
+  
+  MailerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        S3Bucket: b-yr-morningMail
+        S3Key: mailerLambda.zip
+      Description: The Lambda Function which sends a hello world email to all subscribers
+        of the topic.
+      Environment:
+        Variables:
+          SNS_ARN: !Ref SNSEmailTopic
+      FunctionName: !Ref LambdaFunctionName
+      Handler: !Ref LambdaHandlerName
+      Runtime: python3.7
+      Role : arn:aws:iam::488599217855:role/full_access
+      Tags: 
+        - 
+          Key: "Email"
+          Value: "yashraj.gangal@quantiphi.com"
+        - 
+          Key: "Name"
+          Value: "yr-AutomationAssessment"
+        - 
+          Key: "Project"
+          Value: "pe-training"
+        - 
+          Key: "Username"
+          Value: "yashraj.gangal@quantiphi.com"
+    DependsOn:
+      - SNSEmailTopic
+  
+  LambdaInvokePermission:
+    Type : AWS::Lambda::Permission
+    Properties :
+      Action: lambda:InvokeFunction
+      FunctionName : !Ref MailerLambda
+      Principal : events.amazonaws.com
+      SourceARN : !Ref timeEvent
+
+  SNSPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Id: "SNSPolicyId"
+        Version: '2012-10-17'
+        Statement:
+        - Sid: "sns"
+          Effect: "Allow"
+          Principal: !Ref MailerLambda
+          Action:
+            - sns:Publish
+          Resource: "*"
+      Topics:
+      - !Ref SNSTopic
+...
